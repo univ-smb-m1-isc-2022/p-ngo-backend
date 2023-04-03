@@ -4,15 +4,12 @@ import com.ygdrazil.pingo.pingobackend.models.BingoGrid;
 import com.ygdrazil.pingo.pingobackend.models.User;
 import com.ygdrazil.pingo.pingobackend.repositories.BingoRepository;
 import com.ygdrazil.pingo.pingobackend.requestObjects.CreateBingoGridRequest;
-import com.ygdrazil.pingo.pingobackend.responseObjects.BingoResponse;
-import com.ygdrazil.pingo.pingobackend.utils.BingoGridNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -20,67 +17,37 @@ public class BingoService {
 
     private final BingoRepository repository;
 
-    public BingoResponse find(Long bingoId) {
-        Optional<BingoGrid> potentialGrid = repository.findById(bingoId);
-
-        if(potentialGrid.isEmpty())
-            throw new BingoGridNotFoundException(bingoId);
-
-        BingoGrid bingoGrid = potentialGrid.get();
-
-        return BingoResponse.builder()
-                .id(bingoGrid.getId())
-                .name(bingoGrid.getName())
-                .gridData(bingoGrid.getGridData())
-                .build();
+    public Optional<BingoGrid> find(Long bingoId) {
+        return repository.findById(bingoId);
     }
 
-    public List<BingoResponse> findAll() {
-        User authenticatedUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
-        System.out.println("Requested by : " + authenticatedUser.getId());
-
-        List<BingoGrid> gridList = repository.findAll();
-
-        return gridList.stream().map(bingoGrid -> new BingoResponse(bingoGrid.getId(), bingoGrid.getName(), bingoGrid.getGridData())).collect(Collectors.toList());
+    public List<BingoGrid> findAll() {
+        return repository.findAll();
     }
 
-    public BingoResponse insert(CreateBingoGridRequest request) {
-        User authenticatedUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    public Optional<BingoGrid> insert(CreateBingoGridRequest request, User author) {
 
-        System.out.println("Requested by : " + authenticatedUser.getId());
+        Optional<BingoGrid> existingGrid = repository.findBingoGridByName(request.getName());
+
+        if(existingGrid.isPresent())
+            return Optional.empty();
+
+        String urlCode = DigestUtils.sha1Hex(request.getName());
 
         BingoGrid bingoGrid = BingoGrid.builder()
                 .name(request.getName())
+                .urlCode(urlCode)
+                .user(author)
                 .gridData(request.getGridData())
                 .build();
 
-        bingoGrid = repository.save(bingoGrid);
-
-        return BingoResponse.builder()
-                .id(bingoGrid.getId())
-                .name(bingoGrid.getName())
-                .gridData(bingoGrid.getGridData())
-                .build();
+        return Optional.of(repository.save(bingoGrid));
     }
 
-    public BingoResponse modify(Long bingoId, CreateBingoGridRequest body) {
-        Optional<BingoGrid> gridToModify = repository.findById(bingoId);
+    public BingoGrid modify(BingoGrid modifiedBingoGrid, CreateBingoGridRequest body) {
+        modifiedBingoGrid.setName(body.getName());
+        modifiedBingoGrid.setGridData(body.getGridData());
 
-        if(gridToModify.isEmpty())
-            throw new BingoGridNotFoundException(bingoId);
-
-        BingoGrid bingoGrid = gridToModify.get();
-
-        bingoGrid.setName(body.getName());
-        bingoGrid.setGridData(body.getGridData());
-
-        bingoGrid = repository.save(bingoGrid);
-
-        return BingoResponse.builder()
-                .id(bingoGrid.getId())
-                .name(bingoGrid.getName())
-                .gridData(bingoGrid.getGridData())
-                .build();
+        return repository.save(modifiedBingoGrid);
     }
 }

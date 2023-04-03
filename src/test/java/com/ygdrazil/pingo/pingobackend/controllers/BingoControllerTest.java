@@ -1,12 +1,15 @@
 package com.ygdrazil.pingo.pingobackend.controllers;
 
-import com.ygdrazil.pingo.pingobackend.responseObjects.BingoResponse;
+import com.ygdrazil.pingo.pingobackend.auth.AuthenticationService;
+import com.ygdrazil.pingo.pingobackend.models.BingoGrid;
+import com.ygdrazil.pingo.pingobackend.models.User;
 import com.ygdrazil.pingo.pingobackend.services.BingoService;
-import com.ygdrazil.pingo.pingobackend.utils.BingoGridNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -17,17 +20,23 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standal
 class BingoControllerTest {
 
     private BingoService bingoService;
+    private AuthenticationService authenticationService;
     private MockMvc mockMvc;
+
+    private User mockUser;
 
     @BeforeEach
     public void init() {
         bingoService = mock(BingoService.class);
-        mockMvc = standaloneSetup(new BingoController(bingoService)).build();
+        authenticationService = mock(AuthenticationService.class);
+        mockMvc = standaloneSetup(new BingoController(bingoService, authenticationService)).build();
+
+        mockUser = User.builder().id(0L).build();
     }
 
     @Test
     public void find_noGridFound() throws Exception {
-        when(bingoService.find(any())).thenThrow(BingoGridNotFoundException.class);
+        when(bingoService.find(any())).thenReturn(Optional.empty());
 
         mockMvc.perform(MockMvcRequestBuilders
                 .get("/bingo/0"))
@@ -36,7 +45,7 @@ class BingoControllerTest {
 
     @Test
     public void find_gridFound() throws Exception {
-        when(bingoService.find(any())).thenReturn(BingoResponse.builder().name("test").build());
+        when(bingoService.find(any())).thenReturn(Optional.of(BingoGrid.builder().name("test").user(mockUser).build()));
 
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/bingo/0"))

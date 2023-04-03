@@ -2,6 +2,7 @@ package com.ygdrazil.pingo.pingobackend.config;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -24,15 +25,37 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
-        final String authHeader = request.getHeader("Authorization");
+
+        Cookie[] cookies = request.getCookies();
+        Cookie sessionCookie = null;
+        if(cookies != null) {
+            for(Cookie cookie: cookies) {
+                if(cookie.getName().equals("JSESSIONID")) {
+                    sessionCookie = cookie;
+                    break;
+                }
+            }
+        }
+
         final String jwtToken;
         final String username;
 
-        if(authHeader == null || !authHeader.startsWith("Bearer ")){
+        if(sessionCookie == null){
             filterChain.doFilter(request, response);
             return;
         }
-        jwtToken = authHeader.substring(7);
+
+        jwtToken = sessionCookie.getValue();
+
+        if(jwtService.isTokenExpired(jwtToken)) {
+            sessionCookie.setValue("");
+            sessionCookie.setMaxAge(0);
+            sessionCookie.setPath("/");
+            response.addCookie(sessionCookie);
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         username = jwtService.extractUsername(jwtToken);
 
         if(username != null && SecurityContextHolder.getContext().getAuthentication() == null) {

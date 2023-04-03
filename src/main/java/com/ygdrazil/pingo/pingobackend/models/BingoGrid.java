@@ -18,12 +18,18 @@ import java.util.Map;
 public class BingoGrid {
 
     @Id
-    @SequenceGenerator(name = "bingo_grids_sequence", sequenceName = "bingo_grids_sequence", allocationSize = 1)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "bingo_grids_sequence")
+    @GeneratedValue
     private Long id;
+
+    @Column(nullable = false, unique = true, length = 50)
+    private String urlCode;
 
     @Column(nullable = false, length=50, unique = true)
     private String name;
+
+    @ManyToOne
+    @JoinColumn(nullable = false, name="user_id")
+    private User user;
 
     @Column
     @Convert(converter = HashMapConverter.class)

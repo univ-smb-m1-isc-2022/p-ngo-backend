@@ -12,6 +12,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @Builder
@@ -33,6 +34,9 @@ public class User implements UserDetails {
 
     @Column(nullable = false, length = 64)
     private String password;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private Set<BingoGrid> bingoGrids;
 
     @Enumerated(EnumType.STRING)
     private Role role;

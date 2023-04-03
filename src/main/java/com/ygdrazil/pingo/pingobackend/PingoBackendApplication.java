@@ -15,7 +15,6 @@ public class PingoBackendApplication {
 
     @GetMapping("/hello")
     public String sayHello(@RequestParam(value = "name", defaultValue = "World") String name) {
-        System.out.println(org.hibernate.Version.getVersionString());
         return String.format("Hello %s!", name);
     }
 }

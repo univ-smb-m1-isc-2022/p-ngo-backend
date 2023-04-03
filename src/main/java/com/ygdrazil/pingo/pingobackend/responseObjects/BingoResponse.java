@@ -1,5 +1,6 @@
 package com.ygdrazil.pingo.pingobackend.responseObjects;
 
+import com.ygdrazil.pingo.pingobackend.models.BingoGrid;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,7 +14,17 @@ import java.util.Map;
 @NoArgsConstructor
 public class BingoResponse {
     private Long id;
+    private Long authorId;
+    private String urlCode;
     private String name;
     private Map<String, Object> gridData;
+
+    public BingoResponse(BingoGrid grid) {
+        id = grid.getId();
+        authorId = grid.getUser().getId();
+        urlCode = grid.getUrlCode();
+        name = grid.getName();
+        gridData = grid.getGridData();
+    }
 
 }
