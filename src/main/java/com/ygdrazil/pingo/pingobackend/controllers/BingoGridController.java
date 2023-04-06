@@ -18,8 +18,6 @@ import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;

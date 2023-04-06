@@ -1,14 +1,10 @@
 package com.ygdrazil.pingo.pingobackend.models;
 
-import com.ygdrazil.pingo.pingobackend.utils.HashMapConverter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @Data
 @Builder

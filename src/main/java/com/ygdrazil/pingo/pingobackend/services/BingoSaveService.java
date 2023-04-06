@@ -1,6 +1,5 @@
 package com.ygdrazil.pingo.pingobackend.services;
 
-import com.ygdrazil.pingo.pingobackend.models.BingoGrid;
 import com.ygdrazil.pingo.pingobackend.models.BingoSave;
 import com.ygdrazil.pingo.pingobackend.models.User;
 import com.ygdrazil.pingo.pingobackend.repositories.BingoSaveRepository;
