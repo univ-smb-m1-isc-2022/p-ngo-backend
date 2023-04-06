@@ -14,6 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -117,7 +118,7 @@ class BingoGridControllerTest {
                     .content(asJsonString(CreateBingoGridRequest.builder()
                             .name("test_grid")
                             .dim(3)
-                            .gridData(List.of("Test1"))
+                            .gridData(createListOfXElements(9))
                             .build())
                     )
                     .contentType(MediaType.APPLICATION_JSON)
@@ -137,7 +138,7 @@ class BingoGridControllerTest {
                         .content(asJsonString(CreateBingoGridRequest.builder()
                                 .name("test_grid")
                                 .dim(3)
-                                .gridData(List.of("Test1"))
+                                .gridData(createListOfXElements(9))
                                 .build())
                         )
                         .contentType(MediaType.APPLICATION_JSON)
@@ -145,6 +146,26 @@ class BingoGridControllerTest {
                 .andExpect(status().is(409))
                 .andExpect(content().contentType(CONTENT_TEXT))
                 .andExpect(content().string("Error, resource name already exists"));
+    }
+
+    @Test
+    void insert_badRequest() throws Exception {
+        when(authenticationService.getAuthenticatedUser()).thenReturn(Optional.of(mockUser));
+        when(bingoService.insert(any(), any())).thenReturn(Optional.empty());
+
+        mockMvc.perform(MockMvcRequestBuilders
+                        .post("/bingo")
+                        .content(asJsonString(CreateBingoGridRequest.builder()
+                                .name("test_grid")
+                                .dim(4)
+                                .gridData(List.of("Test1"))
+                                .build())
+                        )
+                        .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().is(400))
+                .andExpect(content().contentType(CONTENT_TEXT))
+                .andExpect(content().string("Error, bad request"));
     }
 
     @Test
@@ -164,7 +185,7 @@ class BingoGridControllerTest {
                         .content(asJsonString(CreateBingoGridRequest.builder()
                                 .name("test_grid")
                                 .dim(3)
-                                .gridData(List.of("Test1"))
+                                .gridData(createListOfXElements(9))
                                 .build())
                         )
                         .contentType(MediaType.APPLICATION_JSON)
@@ -203,7 +224,7 @@ class BingoGridControllerTest {
                         .content(asJsonString(CreateBingoGridRequest.builder()
                                 .name("test_grid_modified")
                                 .dim(3)
-                                .gridData(List.of("Test1"))
+                                .gridData(createListOfXElements(9))
                                 .build())
                         )
                         .contentType(MediaType.APPLICATION_JSON)
@@ -230,7 +251,7 @@ class BingoGridControllerTest {
                         .content(asJsonString(CreateBingoGridRequest.builder()
                                 .name("test_grid_modified")
                                 .dim(3)
-                                .gridData(List.of("Test1"))
+                                .gridData(createListOfXElements(9))
                                 .build())
                         )
                         .contentType(MediaType.APPLICATION_JSON)
@@ -238,6 +259,25 @@ class BingoGridControllerTest {
                 .andExpect(status().is(401))
                 .andExpect(content().contentType(CONTENT_TEXT))
                 .andExpect(content().string("Error, unauthorized access to resource"));
+    }
+
+    @Test
+    void modify_badRequest() throws Exception {
+        when(authenticationService.getAuthenticatedUser()).thenReturn(Optional.of(mockUser));
+
+        mockMvc.perform(MockMvcRequestBuilders
+                        .put("/bingo/0")
+                        .content(asJsonString(CreateBingoGridRequest.builder()
+                                .name("test_grid_modified")
+                                .dim(4)
+                                .gridData(List.of("Test1"))
+                                .build())
+                        )
+                        .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().is(400))
+                .andExpect(content().contentType(CONTENT_TEXT))
+                .andExpect(content().string("Error, bad request"));
     }
 
     @Test
@@ -268,7 +308,7 @@ class BingoGridControllerTest {
                         .content(asJsonString(CreateBingoGridRequest.builder()
                                 .name("test_grid_modified")
                                 .dim(3)
-                                .gridData(List.of("Test1"))
+                                .gridData(createListOfXElements(9))
                                 .build())
                         )
                         .contentType(MediaType.APPLICATION_JSON)
@@ -345,6 +385,17 @@ class BingoGridControllerTest {
                 .andExpect(status().is(200))
                 .andExpect(content().contentType(CONTENT_TEXT))
                 .andExpect(content().string("Grid deleted"));
+    }
+
+    private static List<String> createListOfXElements(int nb) {
+        ArrayList<String> ls = new ArrayList<>();
+
+        for(var i = 0; i<nb; i++) {
+            ls.add("test");
+        }
+
+        return ls.stream().toList();
+
     }
 
     public static String asJsonString(final Object obj) {
