@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/user")
@@ -35,8 +34,9 @@ public class UserController {
 
         Optional<ResponseEntity<?>> potErrorResponse = checkUser(potAuthUser, user_id);
 
-        if(potErrorResponse.isPresent())
+        if(potErrorResponse.isPresent()){
             return potErrorResponse.get();
+        }
 
         Optional<BingoSave> potBingoSave = bingoSaveService.findByUserAndUrlCode(user_id, url_code);
 
@@ -85,6 +85,8 @@ public class UserController {
         if(potErrorResponse.isPresent())
             return potErrorResponse.get();
 
+
+
         Optional<BingoSave> potBingoSave = bingoSaveService.modify(body, potAuthUser.get());
 
         if(potBingoSave.isEmpty()) {
@@ -104,7 +106,7 @@ public class UserController {
 
         if(potAuthUser.isEmpty()) {
             return ResponseEntity
-                    .status(401)
+                    .status(403)
                     .body("Error, you are not authenticated");
         }
 
@@ -133,7 +135,7 @@ public class UserController {
 
         if(potAuthUser.isEmpty()) {
             return Optional.of(ResponseEntity
-                    .status(401)
+                    .status(403)
                     .body("Error, you are not authenticated"));
         }
 
