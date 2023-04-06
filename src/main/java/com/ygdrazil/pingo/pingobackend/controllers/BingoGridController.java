@@ -93,6 +93,12 @@ public class BingoGridController {
 
         User authUser = potAuthUser.get();
 
+        if(body.getDim() < 3 || body.getDim() % 2 == 0 || (body.getDim() * body.getDim()) > body.getGridData().size()) {
+            return ResponseEntity
+                    .status(400)
+                    .body("Error, bad request");
+        }
+
         Optional<BingoGrid> potCreatedGrid = bingoService.insert(body, authUser);
 
         if(potCreatedGrid.isEmpty()) {
@@ -119,6 +125,12 @@ public class BingoGridController {
         }
 
         User authUser = potAuthUser.get();
+
+        if(body.getDim() < 3 || body.getDim() % 2 == 0 || (body.getDim() * body.getDim()) > body.getGridData().size()) {
+            return ResponseEntity
+                    .status(400)
+                    .body("Error, bad request");
+        }
 
         Optional<BingoGrid> potGrid = bingoService.find(bingo_id);
 

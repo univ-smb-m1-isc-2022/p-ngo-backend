@@ -21,6 +21,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AuthenticationController {
 
+    private final String SESSION_COOKIE_NAME = "JSESSIONID";
+
     private final AuthenticationService service;
     private final JwtService jwtService;
 
@@ -44,7 +46,7 @@ public class AuthenticationController {
 
         var jwtToken = jwtService.generateToken(user);
 
-        ResponseCookie cookie = ResponseCookie.from("JSESSIONID", jwtToken)
+        ResponseCookie cookie = ResponseCookie.from(SESSION_COOKIE_NAME, jwtToken)
                 .httpOnly(true)
                 .sameSite("Lax")
                 .maxAge(Duration.ofDays(1))
@@ -74,7 +76,7 @@ public class AuthenticationController {
 
         var jwtToken = jwtService.generateToken(user.get());
 
-        ResponseCookie cookie = ResponseCookie.from("JSESSIONID", jwtToken)
+        ResponseCookie cookie = ResponseCookie.from(SESSION_COOKIE_NAME, jwtToken)
                 .httpOnly(true)
                 .sameSite("Lax")
                 .maxAge(Duration.ofHours(24))
@@ -114,7 +116,7 @@ public class AuthenticationController {
 
     @PostMapping("/disconnect")
     public ResponseEntity<?> disconnect() {
-        ResponseCookie cookie = ResponseCookie.from("JSESSIONID", "")
+        ResponseCookie cookie = ResponseCookie.from(SESSION_COOKIE_NAME, "")
                 .httpOnly(true)
                 .sameSite("Lax")
                 .maxAge(0)

@@ -51,7 +51,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try{
             jwtService.isTokenExpired(jwtToken);
         } catch (Exception e) {
-            System.out.println("token expired");
             sessionCookie.setValue("");
             sessionCookie.setMaxAge(0);
             sessionCookie.setPath("/");
