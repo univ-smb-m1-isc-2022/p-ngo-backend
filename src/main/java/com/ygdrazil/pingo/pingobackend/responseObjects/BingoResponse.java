@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Map;
+import java.util.List;
 
 @Data
 @Builder
@@ -17,13 +17,15 @@ public class BingoResponse {
     private Long authorId;
     private String urlCode;
     private String name;
-    private Map<String, Object> gridData;
+    private int dim;
+    private List<String> gridData;
 
     public BingoResponse(BingoGrid grid) {
         id = grid.getId();
         authorId = grid.getUser().getId();
         urlCode = grid.getUrlCode();
         name = grid.getName();
+        dim = grid.getDim();
         gridData = grid.getGridData();
     }
 

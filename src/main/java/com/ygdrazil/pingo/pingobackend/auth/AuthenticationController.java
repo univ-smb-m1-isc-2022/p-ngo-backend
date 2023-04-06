@@ -4,14 +4,18 @@ import com.ygdrazil.pingo.pingobackend.config.JwtService;
 import com.ygdrazil.pingo.pingobackend.models.User;
 import com.ygdrazil.pingo.pingobackend.requestObjects.AuthenticationRequest;
 import com.ygdrazil.pingo.pingobackend.requestObjects.RegisterRequest;
+import com.ygdrazil.pingo.pingobackend.responseObjects.UserResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.authentication.AuthenticationTrustResolver;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
 
+import java.time.Duration;
 import java.util.Optional;
 
 @RestController
@@ -42,8 +46,16 @@ public class AuthenticationController {
 
         var jwtToken = jwtService.generateToken(user);
 
+        ResponseCookie cookie = ResponseCookie.from("JSESSIONID", jwtToken)
+                .httpOnly(true)
+                .sameSite("Lax")
+                .maxAge(Duration.ofDays(1))
+                .path("/")
+                .build();
+
         HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.SET_COOKIE, "JSESSIONID=" + jwtToken + "; Path=/; HttpOnly");
+        headers.add(HttpHeaders.SET_COOKIE, cookie.toString());
+
         return ResponseEntity
                 .status(200)
                 .headers(headers)
@@ -64,14 +76,60 @@ public class AuthenticationController {
 
         var jwtToken = jwtService.generateToken(user.get());
 
+        ResponseCookie cookie = ResponseCookie.from("JSESSIONID", jwtToken)
+                .httpOnly(true)
+                .sameSite("Lax")
+                .maxAge(Duration.ofHours(24))
+//                .maxAge(Duration.ofSeconds(15))
+                .path("/")
+                .build();
+
         HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.SET_COOKIE, "JSESSIONID=" + jwtToken + "; Path=/; HttpOnly");
+        headers.add(HttpHeaders.SET_COOKIE, cookie.toString());
+
         return ResponseEntity
                 .status(200)
                 .headers(headers)
                 .body("User successfully authenticated");
     }
 
-//    @Get("/user")
-//    public ResponseEntity<>
+    @GetMapping("/user")
+    public ResponseEntity<?> getAuthenticatedUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication.getPrincipal() == "anonymousUser") {
+            return ResponseEntity
+                    .status(404)
+                    .body("Error, No User authenticated");
+        }
+
+        User user = (User) authentication.getPrincipal();
+
+        return ResponseEntity
+                .status(200)
+                .body(UserResponse.builder()
+                        .id(user.getId())
+                        .username(user.getUsername())
+                        .email(user.getEmail())
+                        .role(user.getRole().name())
+                        .build());
+    }
+
+    @PostMapping("/disconnect")
+    public ResponseEntity<?> disconnect() {
+        ResponseCookie cookie = ResponseCookie.from("JSESSIONID", "")
+                .httpOnly(true)
+                .sameSite("Lax")
+                .maxAge(0)
+                .path("/")
+                .build();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        return ResponseEntity
+                .status(200)
+                .headers(headers)
+                .body("User successfully disconnected");
+
+    }
 }

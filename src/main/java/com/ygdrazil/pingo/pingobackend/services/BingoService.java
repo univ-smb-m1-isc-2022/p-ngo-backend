@@ -21,8 +21,16 @@ public class BingoService {
         return repository.findById(bingoId);
     }
 
+    public Optional<BingoGrid> findByUrlCode(String urlCode) {
+        return repository.findBingoGridByUrlCode(urlCode);
+    }
+
     public List<BingoGrid> findAll() {
         return repository.findAll();
+    }
+
+    public List<BingoGrid> findAllByUser(User user) {
+        return repository.findAllByUser(user);
     }
 
     public Optional<BingoGrid> insert(CreateBingoGridRequest request, User author) {
@@ -39,6 +47,7 @@ public class BingoService {
                 .urlCode(urlCode)
                 .user(author)
                 .gridData(request.getGridData())
+                .dim(request.getDim())
                 .build();
 
         return Optional.of(repository.save(bingoGrid));
@@ -49,5 +58,9 @@ public class BingoService {
         modifiedBingoGrid.setGridData(body.getGridData());
 
         return repository.save(modifiedBingoGrid);
+    }
+
+    public void delete(BingoGrid deletedBingoGrid) {
+        repository.delete(deletedBingoGrid);
     }
 }

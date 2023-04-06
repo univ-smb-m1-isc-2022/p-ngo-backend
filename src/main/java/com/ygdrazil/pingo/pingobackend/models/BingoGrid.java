@@ -1,14 +1,14 @@
 package com.ygdrazil.pingo.pingobackend.models;
 
-import com.ygdrazil.pingo.pingobackend.utils.HashMapConverter;
+import com.ygdrazil.pingo.pingobackend.utils.ListStringConverter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -31,7 +31,10 @@ public class BingoGrid {
     @JoinColumn(nullable = false, name="user_id")
     private User user;
 
-    @Column
-    @Convert(converter = HashMapConverter.class)
-    private Map<String, Object> gridData = new HashMap<>();
+    @Column(nullable = false)
+    private int dim;
+
+    @Column(nullable = false)
+    @Convert(converter = ListStringConverter.class)
+    private List<String> gridData = List.of();
 }

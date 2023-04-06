@@ -9,14 +9,14 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class HashMapConverter implements AttributeConverter<Map<String, Object>, String> {
+public class HashMapConverter<K,V> implements AttributeConverter<Map<K, V>, String> {
 
 
     private final static ObjectMapper objectMapper = new ObjectMapper();
 
 
     @Override
-    public String convertToDatabaseColumn(Map<String, Object> map) {
+    public String convertToDatabaseColumn(Map<K, V> map) {
 
         String mapJson = null;
         try {
@@ -29,12 +29,12 @@ public class HashMapConverter implements AttributeConverter<Map<String, Object>,
     }
 
     @Override
-    public Map<String, Object> convertToEntityAttribute(String mapJson) {
+    public Map<K, V> convertToEntityAttribute(String mapJson) {
 
-        Map<String, Object> map = null;
+        Map<K, V> map = null;
         try {
             map = objectMapper.readValue(mapJson,
-                    new TypeReference<HashMap<String, Object>>() {});
+                    new TypeReference<HashMap<K, V>>() {});
         } catch (final IOException ignored) {
 
         }
