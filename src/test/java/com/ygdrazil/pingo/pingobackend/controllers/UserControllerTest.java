@@ -6,9 +6,7 @@ import com.ygdrazil.pingo.pingobackend.models.BingoGrid;
 import com.ygdrazil.pingo.pingobackend.models.BingoSave;
 import com.ygdrazil.pingo.pingobackend.models.Role;
 import com.ygdrazil.pingo.pingobackend.models.User;
-import com.ygdrazil.pingo.pingobackend.requestObjects.CreateBingoGridRequest;
 import com.ygdrazil.pingo.pingobackend.requestObjects.CreateBingoSaveRequest;
-import com.ygdrazil.pingo.pingobackend.responseObjects.BingoResponse;
 import com.ygdrazil.pingo.pingobackend.services.BingoSaveService;
 import com.ygdrazil.pingo.pingobackend.services.BingoService;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,14 +14,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
