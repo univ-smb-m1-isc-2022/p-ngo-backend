@@ -5,6 +5,7 @@ import com.ygdrazil.pingo.pingobackend.models.BingoGrid;
 import com.ygdrazil.pingo.pingobackend.models.BingoSave;
 import com.ygdrazil.pingo.pingobackend.models.User;
 import com.ygdrazil.pingo.pingobackend.requestObjects.CreateBingoSaveRequest;
+import com.ygdrazil.pingo.pingobackend.responseObjects.BingoResponse;
 import com.ygdrazil.pingo.pingobackend.services.BingoSaveService;
 import com.ygdrazil.pingo.pingobackend.services.BingoService;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/user")
@@ -23,14 +25,6 @@ public class UserController {
     private final BingoSaveService bingoSaveService;
     private final AuthenticationService authenticationService;
     private final BingoService bingoService;
-
-//    @GetMapping("/{user_id}")
-//    public ResponseEntity<?> find(
-//            @PathVariable Long user_id
-//    ) {
-//
-//    }
-
 
     @GetMapping("/{user_id}/save/{url_code}")
     public ResponseEntity<?> findGridSaveByUserIdAndUrlCode(
@@ -122,9 +116,17 @@ public class UserController {
                     .body("Error, you are trying to access grids that are not your own");
         }
 
-        List<BingoGrid> grids = bingoService.findAllByUser(authUser);
+        List<BingoGrid> gridList = bingoService.findAllByUser(authUser);
 
-        return ResponseEntity.ok(grids);
+        List<BingoResponse> bingoResponseList = gridList.stream().map(bingoGrid -> new BingoResponse(
+                bingoGrid.getId(),
+                bingoGrid.getUser().getId(),
+                bingoGrid.getUrlCode(),
+                bingoGrid.getName(),
+                bingoGrid.getDim(),
+                bingoGrid.getGridData())).toList();
+
+        return ResponseEntity.ok(bingoResponseList);
     }
 
     private Optional<ResponseEntity<?>> checkUser(Optional<User> potAuthUser, Long userId) {
