@@ -5,14 +5,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class CreateBingoGridRequest {
-    private String name;
-    private int dim;
-    private List<String> gridData;
+public class CreateBingoSaveRequest {
+    private String urlCode;
+    private String gridCompletion;
 }

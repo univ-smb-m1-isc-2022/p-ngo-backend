@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.time.Duration;
 
 @Component
 @RequiredArgsConstructor
@@ -47,7 +48,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         jwtToken = sessionCookie.getValue();
 
-        if(jwtService.isTokenExpired(jwtToken)) {
+        try{
+            jwtService.isTokenExpired(jwtToken);
+        } catch (Exception e) {
+            System.out.println("token expired");
             sessionCookie.setValue("");
             sessionCookie.setMaxAge(0);
             sessionCookie.setPath("/");
@@ -70,6 +74,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }
+
+        // We update the cookie maxAge
+        sessionCookie.setHttpOnly(true);
+        sessionCookie.setAttribute("SameSite", "Lax");
+        sessionCookie.setMaxAge((int) Duration.ofDays(1).toSeconds());
+        sessionCookie.setPath("/");
+        response.addCookie(sessionCookie);
 
         filterChain.doFilter(request, response);
     }

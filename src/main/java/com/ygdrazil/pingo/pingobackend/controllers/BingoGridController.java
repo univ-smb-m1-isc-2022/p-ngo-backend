@@ -9,9 +9,13 @@ import com.ygdrazil.pingo.pingobackend.responseObjects.BingoResponse;
 import com.ygdrazil.pingo.pingobackend.services.BingoService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.MessageHeaders;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,10 +26,12 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/bingo")
 @RequiredArgsConstructor
-public class BingoController {
+public class BingoGridController {
 
     private final BingoService bingoService;
     private final AuthenticationService authenticationService;
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
 
     @GetMapping("/{bingo_id}")
     public ResponseEntity<?> find(
@@ -42,8 +48,23 @@ public class BingoController {
         return ResponseEntity.ok(new BingoResponse(grid.get()));
     }
 
+    @GetMapping("/url_code/{bingo_code}")
+    public ResponseEntity<?> findByCode(
+            @PathVariable String bingo_code
+    ){
+        Optional<BingoGrid> grid = bingoService.findByUrlCode(bingo_code);
+
+        if(grid.isEmpty()) {
+            return ResponseEntity
+                    .status(404)
+                    .body("Error, resource not found");
+        }
+
+        return ResponseEntity.ok(new BingoResponse(grid.get()));
+    }
+
     @GetMapping
-    public ResponseEntity<List<BingoResponse>> findAll(){
+    public ResponseEntity<List<BingoResponse>> findAll() {
         List<BingoGrid> gridList = bingoService.findAll();
 
         List<BingoResponse> bingoResponseList = gridList.stream().map(bingoGrid -> new BingoResponse(
@@ -51,6 +72,7 @@ public class BingoController {
                 bingoGrid.getUser().getId(),
                 bingoGrid.getUrlCode(),
                 bingoGrid.getName(),
+                bingoGrid.getDim(),
                 bingoGrid.getGridData())).collect(Collectors.toList());
 
         return ResponseEntity.ok(bingoResponseList);
@@ -65,7 +87,7 @@ public class BingoController {
 
         if(potAuthUser.isEmpty()) {
             return ResponseEntity
-                    .status(401)
+                    .status(403)
                     .body("Error, you are not authenticated");
         }
 
@@ -76,7 +98,7 @@ public class BingoController {
         if(potCreatedGrid.isEmpty()) {
             return ResponseEntity
                     .status(409)
-                    .body("Error, resource name already exist");
+                    .body("Error, resource name already exists");
         }
 
         return ResponseEntity.status(201).body(new BingoResponse(potCreatedGrid.get()));
@@ -92,7 +114,7 @@ public class BingoController {
 
         if(potAuthUser.isEmpty()) {
             return ResponseEntity
-                    .status(401)
+                    .status(403)
                     .body("Error, you are not authenticated");
         }
 
@@ -110,7 +132,7 @@ public class BingoController {
 
         if(!Objects.equals(grid.getUser().getId(), authUser.getId())) {
             return ResponseEntity
-                    .status(403)
+                    .status(401)
                     .body("Error, unauthorized access to resource");
         }
 
@@ -119,14 +141,56 @@ public class BingoController {
         return ResponseEntity.ok(new BingoResponse(grid));
     }
 
+    @DeleteMapping("/{url_code}")
+    @Transactional
+    public ResponseEntity<?> delete(
+            @PathVariable String url_code
+    ) {
+        Optional<User> potAuthUser = authenticationService.getAuthenticatedUser();
 
-    // Test WS
+        if(potAuthUser.isEmpty()) {
+            return ResponseEntity
+                    .status(403)
+                    .body("Error, you are not authenticated");
+        }
 
-    @MessageMapping("/chat")
-    @SendTo("/topic/messages")
-    public WSMessage send(WSMessage message) {
-        System.out.println(message.getFrom() + " : " + message.getText());
-        return message;
+        User authUser = potAuthUser.get();
+
+        Optional<BingoGrid> potGrid = bingoService.findByUrlCode(url_code);
+
+        if(potGrid.isEmpty()) {
+            return ResponseEntity
+                    .status(404)
+                    .body("Error, resource not found");
+        }
+
+        BingoGrid grid = potGrid.get();
+
+        if(!Objects.equals(grid.getUser().getId(), authUser.getId())) {
+            return ResponseEntity
+                    .status(401)
+                    .body("Error, unauthorized access to resource");
+        }
+
+        bingoService.delete(grid);
+
+        return ResponseEntity.ok("Grid deleted");
+    }
+
+
+    // Websocket Logic
+
+    @MessageMapping("/bingo_rooms/{roomUrl}")
+    public void send(@DestinationVariable String roomUrl, WSMessage message) {
+        String username = message.getFrom();
+        messagingTemplate.convertAndSend("/topic/messages/" + roomUrl, message, createHeaders(username));
+        messagingTemplate.convertAndSendToUser(username, "/queue/messages/" + roomUrl, message, createHeaders(username));
+    }
+
+    private MessageHeaders createHeaders(String username) {
+        SimpMessageHeaderAccessor headerAccessor = SimpMessageHeaderAccessor.create();
+        headerAccessor.setHeader("sender", username);
+        return headerAccessor.getMessageHeaders();
     }
 
 
